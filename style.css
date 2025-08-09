@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+body {
+    background-color: #000;
+}
+
+.buttons {
+    font-family: "Space Mono", monospace;
+    color: aliceblue;
+    margin-left: 20%;
+    margin-top: 16%;
+    font-size: 18px;
+}
+
+#title {
+    font-size: 22px;
+}
