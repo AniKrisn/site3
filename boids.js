@@ -230,13 +230,31 @@ function animate(now) {
         requestAnimationFrame(animate);
     } else {
         animationStarted = false;
+        document.dispatchEvent(new Event('boids:ended'));
+    }
+}
+
+function resetBoids() {
+    for (let boid of boids) {
+        boid.pos = new Vect2(Math.random() * canvas.width, Math.random() * canvas.height);
+        boid.vel = new Vect2((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2);
+        boid.acc = new Vect2(0, 0);
+        boid.opacity = 0;
+        boid.fadingIn = false;
+        boid.fadedIn = false;
+        boid.fadeInStart = null;
+        boid.fadingOut = false;
+        boid.fadedOut = false;
+        boid.fadeOutStart = null;
     }
 }
 
 function startBoids() {
     if (animationStarted) return;
+    resetBoids();
     animationStarted = true;
     animationStartTime = performance.now();
+    document.dispatchEvent(new Event('boids:started'));
     requestAnimationFrame(animate);
 }
 
@@ -244,7 +262,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const trigger = document.getElementById('boids');
     if (trigger) {
         trigger.style.cursor = 'pointer';
-        trigger.addEventListener('click', startBoids, { once: true });
+        trigger.addEventListener('click', startBoids);
     }
 });
 

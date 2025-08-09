@@ -8,10 +8,28 @@ body {
     font-family: "Space Mono", monospace;
     color: aliceblue;
     margin-left: 20%;
-    margin-top: 16%;
     font-size: 18px;
+    padding-left: 0;
+    list-style: none;
 }
 
 #title {
+    font-family: "Space Mono", monospace;
+    color: aliceblue;
+    margin-left: 20%;
+    margin-top: 16%;
     font-size: 22px;
+    text-decoration: underline;
+}
+
+
+#menu {
+    opacity: 0;
+    transition: opacity 300ms ease;
+    pointer-events: none;
+}
+
+#menu.visible {
+    opacity: 1;
+    pointer-events: auto;
 }

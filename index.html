@@ -10,14 +10,29 @@
 
     <script src="nlights.js"></script>
     <script src="boids.js"></script>
+    <script src="lorenz.js"></script>
+    <script src="menu.js"></script>
 
-    <ol class="buttons">
-        <div id="title">AKRISHNAN</div>
+    <div id="title">AKRISHNAN</div>
+    <br>
+
+    <ol class="buttons" id="menu">
+        
+        <div id="media">Media</div>
         <br>
         <div id="boids">Boids</div>
         <div id="lorenz">Lorenz</div>
         <div id="conway">Conway</div>
     </ol>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const menu = document.getElementById('menu');
+            setTimeout(() => {
+                if (menu) menu.classList.add('visible');
+            }, 3000);
+        });
+    </script>
 
 
 </body>
