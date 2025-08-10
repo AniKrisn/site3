@@ -99,7 +99,7 @@ function updateLorenz() {
     y += dy;
     z += dz;
     
-    const scale = 9;
+    const scale = 18;
     const scaledX = x * scale;
     const scaledY = y * scale;
     const scaledZ = z * scale;
@@ -163,8 +163,8 @@ function drawLorenzFrame() {
     const { width, height } = lorenzCanvas;
     lorenzCtx.clearRect(0, 0, width, height);
 
-    const centerX = width / 2.5;
-    const centerY = height / 2;
+    const centerX = width / 3.75;
+    const centerY = height / 1.8;
     const offsetX = Math.min(180, Math.max(80, width * 0.08)); // shift to the right
     const mirrorX = -1;
     const mirrorY = 1;
