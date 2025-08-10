@@ -9,13 +9,18 @@
         canvas.style.width = '100%';
         canvas.style.height = '100%';
         canvas.style.pointerEvents = 'none';
-        canvas.style.zIndex = '-1';
+        // Keep canvas behind UI but above body background for broader browser compatibility
+        canvas.style.zIndex = '0';
         
         document.body.appendChild(canvas);
 
         function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            // Render at a reduced internal resolution to improve performance on lower-end/Windows devices
+            const maxScaleDown = 0.85; // scale down internal resolution on big screens
+            const largeScreen = window.innerWidth * window.innerHeight > 1600 * 900;
+            const scale = largeScreen ? maxScaleDown : 1;
+            canvas.width = Math.max(1, Math.floor(window.innerWidth * scale));
+            canvas.height = Math.max(1, Math.floor(window.innerHeight * scale));
         }
 
         window.addEventListener('resize', resizeCanvas);
@@ -81,7 +86,8 @@
             ctx.fillStyle = `rgba(30, 5, 20, ${fadeAlpha})`;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            if (elapsed < 5000) {
+            // Allow a longer visible window so slow startups still show the effect
+            if (elapsed < 3000) {
                 // half as fast on mobile screens because the speed is calculated with screen width
                 const timeScale = time * (window.innerWidth < 768 ? 0.001 : 0.003);
                 const moveX = Math.sin(timeScale * 0.5) * canvas.width * 0.2;
@@ -90,10 +96,14 @@
                 const intensity = 0.85;
                 const hueIncrement = 0.8; // slow hue increase
 
-                for (let x = 0; x < canvas.width; x += 4) {
-                    for (let y = 0; y < canvas.height; y += 2) {
+                // Adapt step size to canvas size to keep work roughly bounded
+                const stepX = Math.max(2, Math.round(canvas.width / 320));
+                const stepY = Math.max(2, Math.round(canvas.height / 180));
+
+                for (let x = 0; x < canvas.width; x += stepX) {
+                    for (let y = 0; y < canvas.height; y += stepY) {
                         const noiseX = (x + moveX) * 0.0002;   
-                        const noiseY = (y + moveY) * 0.0002;
+                        const noiseY = (y + moveY) * 0.00015;
                         const noiseValue = (noise(noiseX, noiseY, timeScale) + 1) / 2 * intensity;
                         const noiseValue2 = (noise(noiseX * 2, noiseY * 2, timeScale * 1.5) + 1) / 2 * intensity;
                         
@@ -108,13 +118,17 @@
                             const lightness = 20 + depth * 50;
                             const alpha = (noiseValue - 0.55) * 2 * 0.20;
                             ctx.fillStyle = `hsla(${hue}, 100%, ${lightness}%, ${alpha})`;
-                            ctx.fillRect(x, y, 3, 3);
+                            const baseW = Math.max(2, stepX - 1);
+                            const baseH = Math.max(2, stepY - 1);
+                            const dotW = Math.max(1, Math.floor(baseW * 1.8));
+                            const dotH = Math.max(1, Math.floor(baseH * 1.3));
+                            ctx.fillRect(x, y, dotW, dotH);
                         }
                     }
                 }
             }
 
-            requestAnimationFrame(() => drawNorthernLights(time + 4));
+            requestAnimationFrame(() => drawNorthernLights(time + 3));
         }
 
         drawNorthernLights(0);

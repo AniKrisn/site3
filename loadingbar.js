@@ -4,7 +4,7 @@
     const fill = document.querySelector('.loading-bar-fill');
     if (!overlay || !fill) return;
 
-    const TOTAL_MS = 2000;
+    const TOTAL_MS = 1700;
     const STUTTER_MS = 250;
     const RANDOM_END_MS = 300;
     const MAIN_MS = TOTAL_MS - STUTTER_MS - RANDOM_END_MS;

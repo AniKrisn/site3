@@ -30,6 +30,16 @@ body {
     pointer-events: auto;
 }
 
+/* Ensure UI sits above the background canvas */
+body > canvas {
+    z-index: -1; /* nlights canvas uses inline z-index:0; keep any other canvases behind UI */
+}
+
+ol.buttons, #loading-overlay {
+    position: relative;
+    z-index: 1;
+}
+
 /* 8-bit retro loading overlay */
 #loading-overlay {
     position: fixed;
