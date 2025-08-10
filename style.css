@@ -17,6 +17,7 @@ body {
 
 #title {
     font-size: 22px;
+    display: inline-block; /* shrink to text width so .socials sits at text edge */
 }
 
 #menu {
@@ -153,6 +154,75 @@ ol.buttons, #loading-overlay {
 }
 
 #log .reading a:hover {
+    text-decoration: none;
+    color: #FFE100;
+}
+
+/* Socials dropdown to the right of title with upward waterfall */
+#title, .title {
+    position: relative;
+}
+
+
+#title .socials, .title .socials {
+    position: absolute;
+    bottom: 0; /* anchor to bottom so it visually grows upward */
+    left: 100%;
+    margin-left: 0; /* avoid hover gap */
+    padding-left: 13px; /* visual spacing without a gap */
+    padding-bottom: 3px;
+    width: 220px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(6px); /* start slightly below, animate upward */
+    transition: opacity 200ms ease, transform 200ms ease, visibility 0s linear 200ms;
+    pointer-events: none;
+    z-index: 2;
+    font-size: 18px;
+}
+
+/* Show on hover and when open */
+#title:hover .socials,
+#title .socials:hover,
+.title:hover .socials,
+.title .socials:hover,
+#title.open .socials,
+.title.open .socials,
+#title .socials.open,
+.title .socials.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition-delay: 0s, 0s, 0s;
+    pointer-events: auto;
+}
+
+/* Children waterfall upward (reverse stagger) */
+#title .socials > *, .title .socials > * {
+    opacity: 0;
+    transform: translateY(6px); /* animate upward */
+    transition: opacity 100ms ease, transform 100ms ease;
+}
+
+#title:hover .socials > *,
+#title .socials:hover > *,
+.title:hover .socials > *,
+.title .socials:hover > *,
+#title.open .socials > *,
+.title.open .socials > *,
+#title .socials.open > *,
+.title .socials.open > * {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: calc(var(--stagger-index, 0) * var(--stagger-step, 40ms));
+}
+
+/* Link style inside socials */
+#title .socials a, .title .socials a {
+    text-decoration: none;
+    color: inherit;
+}
+#title .socials a:hover, .title .socials a:hover {
     text-decoration: none;
     color: #FFE100;
 }

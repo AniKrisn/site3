@@ -39,6 +39,43 @@ document.addEventListener('DOMContentLoaded', () => {
         readingEl.addEventListener('mouseleave', scheduleCloseReading);
     }
 
+    // Setup socials dropdown under title with upward waterfall
+    const titleEl = document.getElementById('title');
+    const socialsEl = titleEl ? titleEl.querySelector('.socials') : null;
+
+    if (socialsEl) {
+        const socialChildren = Array.from(socialsEl.children);
+        // reverse stagger: last child should appear first -> assign higher index to earlier elements
+        const total = socialChildren.length;
+        socialsEl.style.setProperty('--stagger-step', '40ms');
+        socialChildren.forEach((child, idx) => {
+            const reverseIndex = total - idx; // total..1
+            child.style.setProperty('--stagger-index', String(reverseIndex));
+        });
+
+        let socialsHideTimer = null;
+        const openSocials = () => {
+            if (socialsHideTimer) {
+                clearTimeout(socialsHideTimer);
+                socialsHideTimer = null;
+            }
+            titleEl.classList.add('open');
+            socialsEl.classList.add('open');
+        };
+        const scheduleCloseSocials = () => {
+            if (socialsHideTimer) clearTimeout(socialsHideTimer);
+            socialsHideTimer = setTimeout(() => {
+                titleEl.classList.remove('open');
+                socialsEl.classList.remove('open');
+            }, 1000);
+        };
+
+        titleEl.addEventListener('mouseenter', openSocials);
+        socialsEl.addEventListener('mouseenter', openSocials);
+        titleEl.addEventListener('mouseleave', scheduleCloseSocials);
+        socialsEl.addEventListener('mouseleave', scheduleCloseSocials);
+    }
+
     const boidsEl = document.getElementById('boids');
     const lorenzEl = document.getElementById('lorenz');
     const conwayEl = document.getElementById('conway');
