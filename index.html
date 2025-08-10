@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>akrishnan</title>
+    <script>
+        (function() {
+            try {
+                var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || '';
+                if (typeof p === 'string' && /Windows/i.test(p)) {
+                    document.documentElement.classList.add('windows');
+                }
+            } catch (e) { /* no-op */ }
+        })();
+    </script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
