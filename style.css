@@ -98,7 +98,7 @@ ol.buttons, #loading-overlay {
     width: 900px; /* explicit width to override inline-block constraints */
     white-space: wrap; /* prevent text wrapping if needed */
     margin-left: 0; /* remove gap to avoid hover flicker */
-    padding-left: 34px; /* keep visual spacing without creating a gap */
+    padding-left: 36px; /* keep visual spacing without creating a gap */
     opacity: 0;
     visibility: hidden;
     transform: translateY(-6px);
