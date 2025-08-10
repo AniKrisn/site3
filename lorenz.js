@@ -120,6 +120,10 @@ let lorenzCtx = null;
 let lorenzAnimationRunning = false;
 let lorenzAnimationStartTime = 0;
 // Run until explicitly stopped
+let lorenzFadingOut = false;
+let lorenzFadeOutStart = 0;
+const lorenzFadeOutDurationMs = 800;
+let lorenzGlobalAlpha = 1;
 
 
 let rotateX = 24;
@@ -177,7 +181,7 @@ function drawLorenzFrame() {
         const trailAlpha = i / points.length; // older points are dimmer
 
         lorenzCtx.save();
-        lorenzCtx.globalAlpha = Math.min(1, 0.15 + trailAlpha * 0.85);
+        lorenzCtx.globalAlpha = Math.min(1, 0.15 + trailAlpha * 0.85) * lorenzGlobalAlpha;
         lorenzCtx.fillStyle = p.color;
         drawStar(lorenzCtx, screenX, screenY, 1.6 * depthScale);
         lorenzCtx.fill();
@@ -197,6 +201,14 @@ function endLorenz() {
 
 function animateLorenz(now) {
     if (!lorenzAnimationRunning) return;
+    if (lorenzFadingOut) {
+        const elapsedFade = now - lorenzFadeOutStart;
+        lorenzGlobalAlpha = Math.max(0, 1 - (elapsedFade / lorenzFadeOutDurationMs));
+        if (lorenzGlobalAlpha <= 0) {
+            endLorenz();
+            return;
+        }
+    }
     updateLorenz();
     drawLorenzFrame();
     requestAnimationFrame(animateLorenz);
@@ -208,6 +220,8 @@ function startLorenz() {
     resetLorenzState();
     lorenzAnimationRunning = true;
     lorenzAnimationStartTime = performance.now();
+    lorenzFadingOut = false;
+    lorenzGlobalAlpha = 1;
     document.dispatchEvent(new Event('lorenz:started'));
     requestAnimationFrame(animateLorenz);
 }
@@ -215,7 +229,9 @@ function startLorenz() {
 // Stop handler for external controller (menu)
 function stopLorenz() {
     if (!lorenzAnimationRunning) return;
-    endLorenz();
+    if (lorenzFadingOut) return;
+    lorenzFadingOut = true;
+    lorenzFadeOutStart = performance.now();
 }
 
 // Expose globally for menu controller
