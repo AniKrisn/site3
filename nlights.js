@@ -9,7 +9,6 @@
         canvas.style.width = '100%';
         canvas.style.height = '100%';
         canvas.style.pointerEvents = 'none';
-        // Keep canvas behind UI but above body background for broader browser compatibility
         canvas.style.zIndex = '-1';
         
         document.body.appendChild(canvas);

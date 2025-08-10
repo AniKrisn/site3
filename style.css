@@ -226,3 +226,22 @@ ol.buttons, #loading-overlay {
     text-decoration: none;
     color: #FFE100;
 }
+
+/* Mobile-only helper */
+.mobile-only {
+    display: none;
+}
+
+/* Prefer capability-based detection */
+@media (hover: none) and (pointer: coarse) {
+    .mobile-only {
+        display: block;
+    }
+}
+
+/* Fallback for small screens */
+@media (max-width: 768px) {
+    .mobile-only {
+        display: block;
+    }
+}
