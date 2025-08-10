@@ -165,9 +165,9 @@
                             diagonalGradient > irregularShape - 0.1 && 
                             diagonalGradient < irregularShape + 0.1) {
                             const depth = (noiseValue2 - 0.5) * 3;
-                            const hue = (HUE_BASE + depth * HUE_SCALE + time * hueIncrement) % 180;
-                            const lightness = LIGHTNESS_BASE + depth * LIGHTNESS_SCALE;
-                            const alpha = (noiseValue - 0.55) * 2 * ALPHA_MUL;
+                            const hue = (visualConfig.hueBase + depth * visualConfig.hueScale + time * hueIncrement) % 180;
+                            const lightness = visualConfig.lightnessBase + depth * visualConfig.lightnessScale;
+                            const alpha = (noiseValue - 0.55) * 2 * visualConfig.alphaMul;
                             ctx.fillStyle = `hsla(${hue}, 100%, ${lightness}%, ${alpha})`;
                             const baseW = Math.max(2, stepX - 1);
                             const baseH = Math.max(2, stepY - 1);
