@@ -1,4 +1,44 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const logEl = document.getElementById('log');
+    const readingEl = logEl ? logEl.querySelector('.reading') : null;
+
+    // Programmatically assign stagger index for reading children
+    if (readingEl) {
+        const children = Array.from(readingEl.children);
+        // configurable step via CSS var on container
+        readingEl.style.setProperty('--stagger-step', '40ms');
+        children.forEach((child, index) => {
+            child.style.setProperty('--stagger-index', String(index + 1));
+        });
+    }
+
+    // Keep reading open for a short grace period after hover leaves
+    if (logEl && readingEl) {
+        let readingHideTimer = null;
+
+        const openReading = () => {
+            if (readingHideTimer) {
+                clearTimeout(readingHideTimer);
+                readingHideTimer = null;
+            }
+            logEl.classList.add('open');
+            readingEl.classList.add('open');
+        };
+
+        const scheduleCloseReading = () => {
+            if (readingHideTimer) clearTimeout(readingHideTimer);
+            readingHideTimer = setTimeout(() => {
+                logEl.classList.remove('open');
+                readingEl.classList.remove('open');
+            }, 1000); // 1s grace period
+        };
+
+        logEl.addEventListener('mouseenter', openReading);
+        readingEl.addEventListener('mouseenter', openReading);
+        logEl.addEventListener('mouseleave', scheduleCloseReading);
+        readingEl.addEventListener('mouseleave', scheduleCloseReading);
+    }
+
     const boidsEl = document.getElementById('boids');
     const lorenzEl = document.getElementById('lorenz');
     const conwayEl = document.getElementById('conway');

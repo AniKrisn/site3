@@ -79,3 +79,80 @@ ol.buttons, #loading-overlay {
 #loading-overlay.hidden {
     display: none;
 }
+
+/* Hover dropdown: show "Reading" to the right of "Log" without shifting layout */
+#log {
+    position: relative;
+    display: inline-block;
+    cursor: default;
+    user-select: none;
+
+    width: 100px;
+}
+
+#log .reading {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    width: 900px; /* explicit width to override inline-block constraints */
+    white-space: wrap; /* prevent text wrapping if needed */
+    margin-left: 0; /* remove gap to avoid hover flicker */
+    padding-left: 34px; /* keep visual spacing without creating a gap */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity 200ms ease, transform 200ms ease, visibility 0s linear 200ms;
+    pointer-events: none;
+    z-index: 2;
+}
+
+#log:hover .reading,
+#log .reading:hover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition-delay: 0s, 0s, 0s; /* make visibility immediate on show */
+    pointer-events: auto;
+}
+
+/* Also show when JS adds 'open' class (for delayed hide) */
+#log.open .reading,
+#log .reading.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition-delay: 0s, 0s, 0s;
+    pointer-events: auto;
+}
+
+/* Waterfall children inside the reading dropdown (programmatic via CSS vars) */
+#log .reading > * {
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 100ms ease, transform 100ms ease;
+}
+
+#log:hover .reading > *,
+#log .reading:hover > * {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: calc(var(--stagger-index, 0) * var(--stagger-step, 40ms));
+}
+
+/* Also show children when JS adds 'open' class */
+#log.open .reading > *,
+#log .reading.open > * {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: calc(var(--stagger-index, 0) * var(--stagger-step, 40ms));
+}
+
+#log .reading a {
+    text-decoration: none;
+    color: inherit;
+}
+
+#log .reading a:hover {
+    text-decoration: none;
+    color: #FFE100;
+}
