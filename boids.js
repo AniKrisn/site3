@@ -55,12 +55,10 @@ class Particle {
         this.opacity = opacity;
     }
     update() {
-        // Lightweight physics
         this.pos = this.pos.add(this.vel);
         this.vel = this.vel.mult(0.3); // slight drag
         this.size = Math.max(0, this.size * 0.985);
         this.life -= 1;
-        // Fade based on remaining life
         this.opacity = Math.max(0, this.life / this.maxLife);
         return this.life > 0 && this.size > 0.2 && this.opacity > 0.02;
     }
@@ -76,8 +74,6 @@ class Particle {
         ctx.restore();
     }
 }
-
-// Muted trails, no hue cycling
 
 class Vect2 {
     constructor(x = 0, y = 0) {
@@ -255,8 +251,8 @@ canvas.style.top = '0';
 canvas.style.left = '0';
 canvas.style.width = '100vw';
 canvas.style.height = '100vh';
-canvas.style.pointerEvents = 'none'; // allow clicks through
-canvas.style.zIndex = '0'; // behind everything
+canvas.style.pointerEvents = 'none';
+canvas.style.zIndex = '0';
 document.body.prepend(canvas);
 
 function resizeCanvas() {
@@ -292,38 +288,34 @@ for (let i = 0; i < boidCount; i++) {
 
 let animationStarted = false;
 let animationStartTime = null;
-let fadeOutGlobalStartAfterMs = Infinity; // only trigger on explicit stop
+let fadeOutGlobalStartAfterMs = Infinity;
 const fadeOutDurationMs = 1200;
 
 function animate(now) {
     if (!animationStarted) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const elapsed = now - animationStartTime;
-    // Emit particles and update boids
     for (let boid of boids) {
         boid.fadeIn(elapsed);
         boid.fadeOut(elapsed, fadeOutGlobalStartAfterMs, fadeOutDurationMs);
         if (boid.opacity > 0) {
-            // Boid movement
             boid.flock(boids);
             boid.update();
-
-            // Particle emission behind the boid
+        
             const velocityMagnitude = boid.vel.length();
             const direction = boid.vel.length() > 0 ? boid.vel.normalize() : new Vect2(1, 0);
             const emissionCount = Math.min(3, 1 + Math.floor(velocityMagnitude * 0.7));
             const spawnBaseX = boid.pos.x - direction.x * boid.size * 2;
             const spawnBaseY = boid.pos.y - direction.y * boid.size * 2;
             for (let i = 0; i < emissionCount; i++) {
-                const jitterAngle = (Math.random() - 0.5) * Math.PI * 0.5; // +/- 45 deg
+                const jitterAngle = (Math.random() - 0.5) * Math.PI * 0.5;
                 const jitterSpeed = velocityMagnitude * (0.05 + Math.random() * 0.1);
                 const cosA = Math.cos(jitterAngle);
                 const sinA = Math.sin(jitterAngle);
                 const vx = (-direction.x * cosA + -direction.y * sinA) * jitterSpeed;
                 const vy = (-direction.y * cosA + direction.x * sinA) * jitterSpeed;
                 const size = 0.8 + Math.random() * 1.0;
-                const life = 20 + Math.floor(Math.random() * 18); // 20-38 frames
-                // Muted color derived from the boid's base color, lightly desaturated and slightly varied in brightness
+                const life = 20 + Math.floor(Math.random() * 18);
                 const baseRgb = hexToRgb(boid.color);
                 const neutral = { r: 200, g: 200, b: 200 };
                 const desaturated = mixRgb(baseRgb, neutral, 0.35);
@@ -344,22 +336,17 @@ function animate(now) {
         }
     }
 
-    // Update and draw particles (behind boids)
     if (particles.length > 0) {
-        // Update
         for (let i = particles.length - 1; i >= 0; i--) {
             const alive = particles[i].update();
             if (!alive) particles.splice(i, 1);
         }
-        // Cap particle count
         if (particles.length > MAX_PARTICLES) {
             particles.splice(0, particles.length - MAX_PARTICLES);
         }
-        // Draw with normal blending for a more understated look
         for (let p of particles) p.draw(ctx);
     }
 
-    // Draw boids on top
     for (let boid of boids) {
         boid.draw(ctx);
     }
@@ -399,15 +386,11 @@ function startBoids() {
     requestAnimationFrame(animate);
 }
 
-// Allow external controller (menu) to stop early and trigger fade-out
 function stopBoids() {
     if (!animationStarted) return;
-    // Request fade-out to start now (staggered by per-boid delay)
     fadeOutGlobalStartAfterMs = 0;
-    // animate() loop already running; it will detect fade-out completion
 }
 
-// Expose controls globally for menu controller
 window.startBoids = startBoids;
 window.stopBoids = stopBoids;
 

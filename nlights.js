@@ -21,9 +21,8 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Seeded random number generator for consistent patterns
         function createSeededRandom(seed) {
-            let m = 0x80000000; // 2**31
+            let m = 0x80000000;
             let a = 1103515245;
             let c = 12345;
             let state = seed;
@@ -34,7 +33,7 @@
             };
         }
 
-        // Initialize with your specific seed
+        // specific seed for pattern!
         const rng = createSeededRandom(1754823955821);
         
         // Perlin noise setup with seeded randomness
@@ -74,7 +73,6 @@
             );
         }
 
-        // Record the start time for the animation
         const startTime = performance.now();
 
         function drawNorthernLights(time) {
@@ -90,7 +88,7 @@
                 const moveY = Math.cos(timeScale * 0.3) * canvas.height * 0.1;
 
                 const intensity = 0.85;
-                const hueIncrement = 0.8; // Slow hue increase
+                const hueIncrement = 0.8; // slow hue increase
 
                 for (let x = 0; x < canvas.width; x += 4) {
                     for (let y = 0; y < canvas.height; y += 2) {
