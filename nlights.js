@@ -44,14 +44,12 @@
         };
 
         function resizeCanvas() {
-            // Match backing resolution to CSS size times a capped DPR to avoid blurry upscaling
-            const maxScaleDown = 0.85; // scale down internal resolution on big screens (non-Windows only)
+            // Use CSS pixel dimensions for drawing logic to keep sampling consistent
+            const maxScaleDown = 0.85;
             const largeScreen = window.innerWidth * window.innerHeight > 1600 * 900;
-            const dpr = typeof window.devicePixelRatio === 'number' ? window.devicePixelRatio : 1;
-            const targetDpr = Math.min(dpr, visualConfig.dprCap || dpr);
-            const baseScale = (!isWindows && largeScreen) ? maxScaleDown : 1;
-            canvas.width = Math.max(1, Math.floor(window.innerWidth * targetDpr * baseScale));
-            canvas.height = Math.max(1, Math.floor(window.innerHeight * targetDpr * baseScale));
+            const baseScale = largeScreen ? maxScaleDown : 1;
+            canvas.width = Math.max(1, Math.floor(window.innerWidth * baseScale));
+            canvas.height = Math.max(1, Math.floor(window.innerHeight * baseScale));
         }
 
         window.addEventListener('resize', resizeCanvas);
