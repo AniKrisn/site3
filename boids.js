@@ -1,4 +1,47 @@
-const BOID_COLORS = ['#57564F', '#7A7A73', '#DDDAD0', '#F8F3CE'];
+const BOID_COLORS = [
+    '#16C47F', '#FFD65A', '#FF9D23', '#F93827', '#7C00FE', '#00224D', '#FAEF5D',
+    '#39FF14', '#CCFF00', '#DFFF00', '#FFFF66', '#FFF700', '#FF5F1F', '#FF6E00',
+    '#FF073A', '#FF3D00', '#FF00A0', '#FF00FF', '#FF1493', '#FE019A', '#9400FF',
+    '#BF00FF', '#7DF9FF', '#00FFFF', '#00F5FF', '#00FFC6', '#00FF7F', '#00FFB3',
+    '#ADFF2F', '#BFFF00', '#B0FF00', '#FAFF00', '#FFD700', '#FFA500', '#FF6F61',
+    '#FF2D00', '#FF2400', '#FF3131', '#FF0033', '#FFA343', '#00FFEF', '#00BFFF',
+    '#1F51FF', '#0066FF', '#00FF00', '#00E5FF', '#00E676', '#64FFDA', '#A0FF1F',
+    '#FF69FF'
+];
+
+// Utilities for muted particle colors derived from boid color
+function hexToRgb(hex) {
+    const clean = hex.replace('#', '');
+    const bigint = parseInt(clean, 16);
+    return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255,
+    };
+}
+
+function rgbToString(c) {
+    return `rgb(${c.r}, ${c.g}, ${c.b})`;
+}
+
+function mixRgb(a, b, t) {
+    const clamp01 = (v) => Math.max(0, Math.min(1, v));
+    const tt = clamp01(t);
+    return {
+        r: Math.round(a.r * (1 - tt) + b.r * tt),
+        g: Math.round(a.g * (1 - tt) + b.g * tt),
+        b: Math.round(a.b * (1 - tt) + b.b * tt),
+    };
+}
+
+function adjustBrightness(c, factor) {
+    const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)));
+    return {
+        r: clamp(c.r * factor),
+        g: clamp(c.g * factor),
+        b: clamp(c.b * factor),
+    };
+}
 
 // Particle system for multicolored trails
 class Particle {
@@ -34,7 +77,7 @@ class Particle {
     }
 }
 
-let trailHue = 0; // cycles through hues for multicolored effect
+// Muted trails, no hue cycling
 
 class Vect2 {
     constructor(x = 0, y = 0) {
@@ -226,7 +269,7 @@ window.addEventListener('resize', resizeCanvas);
 const ctx = canvas.getContext('2d');
 const boids = [];
 const particles = [];
-const MAX_PARTICLES = 2500;
+const MAX_PARTICLES = 1800;
 
 
 const separationWeight = 1.0;
@@ -278,10 +321,15 @@ function animate(now) {
                 const sinA = Math.sin(jitterAngle);
                 const vx = (-direction.x * cosA + -direction.y * sinA) * jitterSpeed;
                 const vy = (-direction.y * cosA + direction.x * sinA) * jitterSpeed;
-                const size = 1.1 + Math.random() * 1.6;
-                const life = 28 + Math.floor(Math.random() * 26); // 28-54 frames
-                const hue = (trailHue + Math.random() * 40) % 360;
-                const color = `hsl(${hue}, 90%, 70%)`;
+                const size = 0.8 + Math.random() * 1.0;
+                const life = 20 + Math.floor(Math.random() * 18); // 20-38 frames
+                // Muted color derived from the boid's base color, lightly desaturated and slightly varied in brightness
+                const baseRgb = hexToRgb(boid.color);
+                const neutral = { r: 200, g: 200, b: 200 };
+                const desaturated = mixRgb(baseRgb, neutral, 0.35);
+                const brightness = 0.85 + Math.random() * 0.15;
+                const finalRgb = adjustBrightness(desaturated, brightness);
+                const color = rgbToString(finalRgb);
                 particles.push(new Particle(
                     spawnBaseX + (Math.random() - 0.5) * boid.size,
                     spawnBaseY + (Math.random() - 0.5) * boid.size,
@@ -296,9 +344,6 @@ function animate(now) {
         }
     }
 
-    // Advance hue cycle for multicolored effect
-    trailHue = (trailHue + 0.8) % 360;
-
     // Update and draw particles (behind boids)
     if (particles.length > 0) {
         // Update
@@ -310,11 +355,8 @@ function animate(now) {
         if (particles.length > MAX_PARTICLES) {
             particles.splice(0, particles.length - MAX_PARTICLES);
         }
-        // Draw with additive blending for glow
-        ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
+        // Draw with normal blending for a more understated look
         for (let p of particles) p.draw(ctx);
-        ctx.restore();
     }
 
     // Draw boids on top
@@ -345,7 +387,6 @@ function resetBoids() {
         boid.fadeOutStart = null;
     }
     particles.length = 0;
-    trailHue = 0;
 }
 
 function startBoids() {
