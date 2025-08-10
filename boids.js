@@ -209,7 +209,7 @@ for (let i = 0; i < boidCount; i++) {
 
 let animationStarted = false;
 let animationStartTime = null;
-const fadeOutGlobalStartAfterMs = 3500;
+let fadeOutGlobalStartAfterMs = Infinity; // only trigger on explicit stop
 const fadeOutDurationMs = 1200;
 
 function animate(now) {
@@ -254,16 +254,21 @@ function startBoids() {
     resetBoids();
     animationStarted = true;
     animationStartTime = performance.now();
+    fadeOutGlobalStartAfterMs = Infinity;
     document.dispatchEvent(new Event('boids:started'));
     requestAnimationFrame(animate);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    const trigger = document.getElementById('boids');
-    if (trigger) {
-        trigger.style.cursor = 'pointer';
-        trigger.addEventListener('click', startBoids);
-    }
-});
+// Allow external controller (menu) to stop early and trigger fade-out
+function stopBoids() {
+    if (!animationStarted) return;
+    // Request fade-out to start now (staggered by per-boid delay)
+    fadeOutGlobalStartAfterMs = 0;
+    // animate() loop already running; it will detect fade-out completion
+}
+
+// Expose controls globally for menu controller
+window.startBoids = startBoids;
+window.stopBoids = stopBoids;
 
 

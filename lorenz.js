@@ -1,6 +1,3 @@
-const DEFAULT_SPEED = 75;
-const DEFAULT_PERCOLATION = 0.1;
-
 // Lorenz parameters
 const sigma = 11;
 const rho = 38;
@@ -122,7 +119,7 @@ let lorenzCanvas = null;
 let lorenzCtx = null;
 let lorenzAnimationRunning = false;
 let lorenzAnimationStartTime = 0;
-const lorenzDurationMs = 10000; // keep in sync with menu
+// Run until explicitly stopped
 
 
 let rotateX = 24;
@@ -162,7 +159,7 @@ function drawLorenzFrame() {
     const { width, height } = lorenzCanvas;
     lorenzCtx.clearRect(0, 0, width, height);
 
-    const centerX = width / 2;
+    const centerX = width / 2.5;
     const centerY = height / 2;
     const offsetX = Math.min(180, Math.max(80, width * 0.08)); // shift to the right
     const mirrorX = -1;
@@ -200,14 +197,9 @@ function endLorenz() {
 
 function animateLorenz(now) {
     if (!lorenzAnimationRunning) return;
-    const elapsed = now - lorenzAnimationStartTime;
     updateLorenz();
     drawLorenzFrame();
-    if (elapsed < lorenzDurationMs) {
-        requestAnimationFrame(animateLorenz);
-    } else {
-        endLorenz();
-    }
+    requestAnimationFrame(animateLorenz);
 }
 
 function startLorenz() {
@@ -220,11 +212,12 @@ function startLorenz() {
     requestAnimationFrame(animateLorenz);
 }
 
-// Wire click handler
-window.addEventListener('DOMContentLoaded', () => {
-    const trigger = document.getElementById('lorenz');
-    if (trigger) {
-        trigger.style.cursor = 'pointer';
-        trigger.addEventListener('click', startLorenz);
-    }
-});
+// Stop handler for external controller (menu)
+function stopLorenz() {
+    if (!lorenzAnimationRunning) return;
+    endLorenz();
+}
+
+// Expose globally for menu controller
+window.startLorenz = startLorenz;
+window.stopLorenz = stopLorenz;

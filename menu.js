@@ -7,15 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     menuItems.forEach((el) => { el.style.cursor = 'pointer'; });
 
-    const DURATIONS_MS = {
-        boids: 10000,
-        lorenz: 10000,
-        conway: 10000,
-    };
-
-    let activeTimeoutId = null;
-    let activeEl = null;
-    // No completed state; items should not permanently disappear
+    let activeEl = null; // which menu item is currently active
 
     function setVisibility(el, visible) {
         el.style.visibility = visible ? 'visible' : 'hidden';
@@ -34,73 +26,100 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function restoreAfterEnd(endedEl) {
-        if (!endedEl) return;
-        // Clear highlight on ended item
-        endedEl.style.color = '';
-
-        // If the ended item is the active one, clear active state
-        if (activeEl === endedEl) {
-            activeEl = null;
-            if (activeTimeoutId) {
-                clearTimeout(activeTimeoutId);
-                activeTimeoutId = null;
-            }
+    function stopActiveAnimation() {
+        if (!activeEl) return;
+        const id = activeEl.id;
+        if (id === 'boids' && typeof window.stopBoids === 'function') {
+            window.stopBoids();
+        } else if (id === 'lorenz' && typeof window.stopLorenz === 'function') {
+            window.stopLorenz();
+        } else if (id === 'conway' && typeof window.stopConway === 'function') {
+            window.stopConway();
         }
-
-        // Show all items again
-        menuItems.forEach((el) => setVisibility(el, true));
     }
 
-    function activateSelection(selectedEl, durationMs) {
-        if (!selectedEl) return;
-        // If another is active, clear fallback timeout
-        if (activeTimeoutId) {
-            clearTimeout(activeTimeoutId);
-            activeTimeoutId = null;
+    function restoreAfterEnd(endedEl) {
+        if (!endedEl) return;
+        endedEl.style.color = '';
+        if (activeEl === endedEl) {
+            activeEl = null;
         }
+        if (activeEl) {
+            // Keep only the active item visible
+            showOrHideAllExcept(activeEl);
+        } else {
+            // No active item; restore all
+            menuItems.forEach((el) => setVisibility(el, true));
+        }
+    }
+
+    function activateSelection(selectedEl) {
+        if (!selectedEl) return;
         activeEl = selectedEl;
 
         // Highlight selected, hide others (layout preserved)
         selectedEl.style.color = '#FFE100';
         showOrHideAllExcept(selectedEl);
-
-        // Fallback in case no :ended event is emitted
-        activeTimeoutId = setTimeout(() => {
-            // Only restore if still active
-            if (activeEl === selectedEl) restoreAfterEnd(selectedEl);
-        }, durationMs);
     }
 
     if (boidsEl) {
         boidsEl.addEventListener('click', () => {
-            activateSelection(boidsEl, DURATIONS_MS.boids);
+            // Toggle behavior
+            if (activeEl === boidsEl) {
+                if (typeof window.stopBoids === 'function') window.stopBoids();
+            } else {
+                // stop whatever is currently active first
+                stopActiveAnimation();
+                activateSelection(boidsEl);
+                if (typeof window.startBoids === 'function') {
+                    window.startBoids();
+                } else if (typeof window.startBoids === 'undefined') {
+                    // fallback to global function without namespacing
+                    if (typeof startBoids === 'function') startBoids();
+                }
+            }
         });
         document.addEventListener('boids:started', () => {
             if (activeEl !== boidsEl) {
-                activateSelection(boidsEl, DURATIONS_MS.boids);
+                activateSelection(boidsEl);
             }
         });
         document.addEventListener('boids:ended', () => restoreAfterEnd(boidsEl));
     }
     if (lorenzEl) {
         lorenzEl.addEventListener('click', () => {
-            activateSelection(lorenzEl, DURATIONS_MS.lorenz);
+            if (activeEl === lorenzEl) {
+                if (typeof window.stopLorenz === 'function') window.stopLorenz();
+            } else {
+                stopActiveAnimation();
+                activateSelection(lorenzEl);
+                if (typeof window.startLorenz === 'function') {
+                    window.startLorenz();
+                } else if (typeof startLorenz === 'function') {
+                    startLorenz();
+                }
+            }
         });
         document.addEventListener('lorenz:started', () => {
             if (activeEl !== lorenzEl) {
-                activateSelection(lorenzEl, DURATIONS_MS.lorenz);
+                activateSelection(lorenzEl);
             }
         });
         document.addEventListener('lorenz:ended', () => restoreAfterEnd(lorenzEl));
     }
     if (conwayEl) {
         conwayEl.addEventListener('click', () => {
-            activateSelection(conwayEl, DURATIONS_MS.conway);
+            if (activeEl === conwayEl) {
+                if (typeof window.stopConway === 'function') window.stopConway();
+            } else {
+                stopActiveAnimation();
+                activateSelection(conwayEl);
+                if (typeof window.startConway === 'function') window.startConway();
+            }
         });
         document.addEventListener('conway:started', () => {
             if (activeEl !== conwayEl) {
-                activateSelection(conwayEl, DURATIONS_MS.conway);
+                activateSelection(conwayEl);
             }
         });
         document.addEventListener('conway:ended', () => restoreAfterEnd(conwayEl));
