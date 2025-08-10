@@ -38,8 +38,22 @@
             };
         }
 
-        // specific seed for pattern!
-        const rng = createSeededRandom(1754823955821);
+        // Weighted selection so the first seed is common and the latter two are rare
+        const weightedSeeds = [
+            { seed: 1754823955821, weight: 80 },
+            { seed: 1754831355458, weight: 10 },
+            { seed: 1754831809116, weight: 10 }
+        ];
+        const totalWeight = weightedSeeds.reduce((sum, s) => sum + s.weight, 0);
+        let threshold = Math.random() * totalWeight;
+        let chosenSeed = weightedSeeds[0].seed;
+        for (const entry of weightedSeeds) {
+            if (threshold < entry.weight) { chosenSeed = entry.seed; break; }
+            threshold -= entry.weight;
+        }
+        const rng = createSeededRandom(chosenSeed);
+        const delayedSeeds = new Set([1754831355458, 1754831809116]); // the two latter seeds are slightly faster, so we delay their start to offset this 
+        const startDelayMs = delayedSeeds.has(chosenSeed) ? 500 : 0;
         
         // Perlin noise setup with seeded randomness
         const p = [];
@@ -78,10 +92,17 @@
             );
         }
 
-        const startTime = performance.now();
+        let startTime = null;
 
         function drawNorthernLights(time) {
+            if (startTime === null) {
+                startTime = performance.now() + startDelayMs; // this is the offset to delay the latter two seeds
+            }
             const elapsed = performance.now() - startTime;
+            if (elapsed < 0) {
+                requestAnimationFrame(() => drawNorthernLights(time));
+                return;
+            }
             const fadeAlpha = elapsed > 15000 ? 0.03 : 0.05;
             ctx.fillStyle = `rgba(30, 5, 20, ${fadeAlpha})`;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
