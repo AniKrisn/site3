@@ -1,8 +1,8 @@
 // Conway's Game of Life — menu-controlled start/stop
 
-const DEFAULT_PERCOLATION = 0.1;
+const DEFAULT_PERCOLATION = 0.15;
 const TRANSITION_DURATION = 0.8; // seconds
-const GRID_SIZE = 20;
+const GRID_SIZE = 22;
 const UPDATE_INTERVAL = 25; // ms
 const GLOW_INTENSITY = '20px';
 const ON_COLOR = '#e6f7ff';
@@ -15,10 +15,16 @@ let conwayFadingOut = false;
 let conwayFadeOutStart = 0;
 const conwayFadeOutDurationMs = 800;
 let conwayGlobalAlpha = 1;
+// Percolation ramp settings
+const PERCOLATION_FADE_DURATION = 2000; // ms to reach DEFAULT_PERCOLATION
+let currentPercolation = 0; // starts at 0 and ramps up to DEFAULT_PERCOLATION
+let percolationFadeStart = 0;
+let isRampingPercolation = false;
 
 let percolationGrid = [];
 let transitionGrid = [];
 let decayTimerGrid = [];
+let randomThresholdGrid = [];
 
 let showScratches = true;
 let verticalJitter = 5;
@@ -58,10 +64,13 @@ function resizeConwayCanvas() {
     const cols = Math.ceil(conwayCanvas.width / GRID_SIZE);
     const rows = Math.ceil(conwayCanvas.height / GRID_SIZE);
 
-    percolationGrid = Array.from({ length: rows }, () =>
-        Array.from({ length: cols }, () => Math.random() < DEFAULT_PERCOLATION)
+    // Stable randomness per cell so ramping density adds cells without flicker
+    randomThresholdGrid = Array.from({ length: rows }, () =>
+        Array.from({ length: cols }, () => Math.random())
     );
-    transitionGrid = percolationGrid.map(row => row.map(cell => (cell ? 1 : 0)));
+    percolationGrid = randomThresholdGrid.map(row => row.map(v => v < currentPercolation));
+    // Start transitions at 0 so new cells fade in visually
+    transitionGrid = Array.from({ length: rows }, () => Array.from({ length: cols }, () => 0));
     decayTimerGrid = percolationGrid.map(row => row.map(() => null));
 }
 
@@ -180,11 +189,29 @@ function animateConway(now) {
             endConway();
             return;
         }
+    } else if (isRampingPercolation && currentPercolation < DEFAULT_PERCOLATION) {
+        // Ramp up density from 0 to DEFAULT_PERCOLATION without running the life rules
+        const elapsed = now - percolationFadeStart;
+        const progress = Math.min(1, elapsed / PERCOLATION_FADE_DURATION);
+        const newPerc = DEFAULT_PERCOLATION * progress;
+        if (newPerc !== currentPercolation) {
+            currentPercolation = newPerc;
+            // Update active cells using stable thresholds; keep transitionGrid as-is for smooth fade
+            for (let r = 0; r < percolationGrid.length; r++) {
+                for (let c = 0; c < percolationGrid[r].length; c++) {
+                    percolationGrid[r][c] = randomThresholdGrid[r][c] < currentPercolation;
+                }
+            }
+        }
+        if (progress >= 1) {
+            isRampingPercolation = false;
+        }
     }
 
     updateTransitions(deltaTime);
     accumulatedTime += deltaTime;
-    if (accumulatedTime > UPDATE_INTERVAL) {
+    if (!isRampingPercolation && accumulatedTime > UPDATE_INTERVAL) {
+        // Only start applying Game of Life rules after ramp completes
         updatePercolationGrid();
         accumulatedTime = 0;
     }
@@ -212,6 +239,16 @@ function startConway() {
     if (conwayAnimationRunning) return;
     ensureConwayCanvas();
     resetConwayState();
+    currentPercolation = 0;
+    percolationFadeStart = performance.now();
+    isRampingPercolation = true;
+    for (let r = 0; r < percolationGrid.length; r++) {
+        for (let c = 0; c < percolationGrid[r].length; c++) {
+            percolationGrid[r][c] = false;
+            transitionGrid[r][c] = 0;
+            decayTimerGrid[r][c] = null;
+        }
+    }
     conwayAnimationRunning = true;
     conwayFadingOut = false;
     conwayGlobalAlpha = 1;
@@ -226,6 +263,5 @@ function stopConway() {
     conwayFadeOutStart = performance.now();
 }
 
-// Expose globally for the menu controller
 window.startConway = startConway;
 window.stopConway = stopConway;
