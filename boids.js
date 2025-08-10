@@ -1,3 +1,41 @@
+const BOID_COLORS = ['#57564F', '#7A7A73', '#DDDAD0', '#F8F3CE'];
+
+// Particle system for multicolored trails
+class Particle {
+    constructor(x, y, velX, velY, size, lifeFrames, color, opacity = 1) {
+        this.pos = new Vect2(x, y);
+        this.vel = new Vect2(velX, velY);
+        this.size = size;
+        this.life = lifeFrames;
+        this.maxLife = lifeFrames;
+        this.color = color;
+        this.opacity = opacity;
+    }
+    update() {
+        // Lightweight physics
+        this.pos = this.pos.add(this.vel);
+        this.vel = this.vel.mult(0.3); // slight drag
+        this.size = Math.max(0, this.size * 0.985);
+        this.life -= 1;
+        // Fade based on remaining life
+        this.opacity = Math.max(0, this.life / this.maxLife);
+        return this.life > 0 && this.size > 0.2 && this.opacity > 0.02;
+    }
+    draw(ctx) {
+        if (this.opacity <= 0) return;
+        ctx.save();
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, this.size, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+let trailHue = 0; // cycles through hues for multicolored effect
+
 class Vect2 {
     constructor(x = 0, y = 0) {
         this.x = x;
@@ -30,7 +68,7 @@ class Boid {
         this.fadingOut = false;
         this.fadedOut = false;
         this.fadeOutStart = null;
-        this.color = `hsl(${Math.floor(Math.random() * 360)}, 80%, 60%)`;
+        this.color = BOID_COLORS[Math.floor(Math.random() * BOID_COLORS.length)];
     }
     update() {
         this.vel = this.vel.add(this.acc).limit(this.maxSpeed);
@@ -187,6 +225,8 @@ window.addEventListener('resize', resizeCanvas);
 
 const ctx = canvas.getContext('2d');
 const boids = [];
+const particles = [];
+const MAX_PARTICLES = 2500;
 
 
 const separationWeight = 1.0;
@@ -216,17 +256,74 @@ function animate(now) {
     if (!animationStarted) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const elapsed = now - animationStartTime;
+    // Emit particles and update boids
     for (let boid of boids) {
         boid.fadeIn(elapsed);
         boid.fadeOut(elapsed, fadeOutGlobalStartAfterMs, fadeOutDurationMs);
         if (boid.opacity > 0) {
+            // Boid movement
             boid.flock(boids);
             boid.update();
+
+            // Particle emission behind the boid
+            const velocityMagnitude = boid.vel.length();
+            const direction = boid.vel.length() > 0 ? boid.vel.normalize() : new Vect2(1, 0);
+            const emissionCount = Math.min(3, 1 + Math.floor(velocityMagnitude * 0.7));
+            const spawnBaseX = boid.pos.x - direction.x * boid.size * 2;
+            const spawnBaseY = boid.pos.y - direction.y * boid.size * 2;
+            for (let i = 0; i < emissionCount; i++) {
+                const jitterAngle = (Math.random() - 0.5) * Math.PI * 0.5; // +/- 45 deg
+                const jitterSpeed = velocityMagnitude * (0.05 + Math.random() * 0.1);
+                const cosA = Math.cos(jitterAngle);
+                const sinA = Math.sin(jitterAngle);
+                const vx = (-direction.x * cosA + -direction.y * sinA) * jitterSpeed;
+                const vy = (-direction.y * cosA + direction.x * sinA) * jitterSpeed;
+                const size = 1.1 + Math.random() * 1.6;
+                const life = 28 + Math.floor(Math.random() * 26); // 28-54 frames
+                const hue = (trailHue + Math.random() * 40) % 360;
+                const color = `hsl(${hue}, 90%, 70%)`;
+                particles.push(new Particle(
+                    spawnBaseX + (Math.random() - 0.5) * boid.size,
+                    spawnBaseY + (Math.random() - 0.5) * boid.size,
+                    vx,
+                    vy,
+                    size,
+                    life,
+                    color,
+                    boid.opacity * 0.9
+                ));
+            }
         }
+    }
+
+    // Advance hue cycle for multicolored effect
+    trailHue = (trailHue + 0.8) % 360;
+
+    // Update and draw particles (behind boids)
+    if (particles.length > 0) {
+        // Update
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const alive = particles[i].update();
+            if (!alive) particles.splice(i, 1);
+        }
+        // Cap particle count
+        if (particles.length > MAX_PARTICLES) {
+            particles.splice(0, particles.length - MAX_PARTICLES);
+        }
+        // Draw with additive blending for glow
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (let p of particles) p.draw(ctx);
+        ctx.restore();
+    }
+
+    // Draw boids on top
+    for (let boid of boids) {
         boid.draw(ctx);
     }
     const allFadedOut = boids.every(b => b.fadedOut);
-    if (!allFadedOut) {
+    const noParticlesLeft = particles.length === 0;
+    if (!(allFadedOut && noParticlesLeft)) {
         requestAnimationFrame(animate);
     } else {
         animationStarted = false;
@@ -247,6 +344,8 @@ function resetBoids() {
         boid.fadedOut = false;
         boid.fadeOutStart = null;
     }
+    particles.length = 0;
+    trailHue = 0;
 }
 
 function startBoids() {

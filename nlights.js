@@ -21,9 +21,25 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Perlin noise function
+        // Seeded random number generator for consistent patterns
+        function createSeededRandom(seed) {
+            let m = 0x80000000; // 2**31
+            let a = 1103515245;
+            let c = 12345;
+            let state = seed;
+            
+            return function() {
+                state = (a * state + c) % m;
+                return state / (m - 1);
+            };
+        }
+
+        // Initialize with your specific seed
+        const rng = createSeededRandom(1754823955821);
+        
+        // Perlin noise setup with seeded randomness
         const p = [];
-        for (let i = 0; i < 256; i++) p[i] = p[i + 256] = Math.floor(Math.random() * 256);
+        for (let i = 0; i < 256; i++) p[i] = p[i + 256] = Math.floor(rng() * 256);
 
         const fade = (t) => t * t * t * (t * (t * 6 - 15) + 10);
         const lerp = (t, a, b) => a + t * (b - a);
@@ -112,4 +128,3 @@
         setupNorthernLights();
     }
 })();
-
