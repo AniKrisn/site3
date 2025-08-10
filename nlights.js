@@ -13,35 +13,12 @@
         
         document.body.appendChild(canvas);
 
-        // OS detection and platform-specific visual tuning
-        const isWindows = (function detectWindows() {
-            try {
-                if (navigator.userAgentData && typeof navigator.userAgentData.platform === 'string') {
-                    return navigator.userAgentData.platform.includes('Windows');
-                }
-            } catch (_) { /* ignore */ }
-            const ua = (navigator.userAgent || '').toLowerCase();
-            const platform = (navigator.platform || '').toLowerCase();
-            return ua.includes('windows') || platform.includes('win');
-        })();
-
-        const visualConfig = isWindows ? {
-            hueBase: 270,
-            hueScale: 110,
-            lightnessBase: 20,
-            lightnessScale: 50,
-            alphaMul: 0.13,
-            addBaseGlow: false,
-            dprCap: Infinity
-        } : {
-            hueBase: 270,
-            hueScale: 110,
-            lightnessBase: 20,
-            lightnessScale: 50,
-            alphaMul: 0.20,
-            addBaseGlow: false,
-            dprCap: Infinity
-        };
+        // Visual constants
+        const HUE_BASE = 270;
+        const HUE_SCALE = 110;
+        const LIGHTNESS_BASE = 20;
+        const LIGHTNESS_SCALE = 50;
+        const ALPHA_MUL = 0.20;
 
         function resizeCanvas() {
             const maxScaleDown = 0.85;
@@ -165,9 +142,9 @@
                             diagonalGradient > irregularShape - 0.1 && 
                             diagonalGradient < irregularShape + 0.1) {
                             const depth = (noiseValue2 - 0.5) * 3;
-                            const hue = (visualConfig.hueBase + depth * visualConfig.hueScale + time * hueIncrement) % 180;
-                            const lightness = visualConfig.lightnessBase + depth * visualConfig.lightnessScale;
-                            const alpha = (noiseValue - 0.55) * 2 * visualConfig.alphaMul;
+                            const hue = (HUE_BASE + depth * HUE_SCALE + time * hueIncrement) % 180;
+                            const lightness = LIGHTNESS_BASE + depth * LIGHTNESS_SCALE;
+                            const alpha = (noiseValue - 0.55) * 2 * ALPHA_MUL;
                             ctx.fillStyle = `hsla(${hue}, 100%, ${lightness}%, ${alpha})`;
                             const baseW = Math.max(2, stepX - 1);
                             const baseH = Math.max(2, stepY - 1);
