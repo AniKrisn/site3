@@ -8,19 +8,11 @@ body {
     font-family: "Space Mono", monospace;
     color: aliceblue;
     margin-left: 20%;
+    margin-top: 20%;
     font-size: 18px;
     padding-left: 0;
     list-style: none;
 }
-
-#title {
-    font-family: "Space Mono", monospace;
-    color: aliceblue;
-    margin-left: 20%;
-    margin-top: 16%;
-    font-size: 22px;
-}
-
 
 #menu {
     opacity: 0;
@@ -31,4 +23,44 @@ body {
 #menu.visible {
     opacity: 1;
     pointer-events: auto;
+}
+
+/* 8-bit retro loading overlay */
+#loading-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    pointer-events: none; /* allow background interaction */
+}
+
+.loading-ui {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.loading-bar {
+    width: 200px;
+    height: 16px;
+    background: transparent;
+    border: 4px solid #fff; /* white pixel frame */
+    image-rendering: pixelated;
+    box-shadow: none;
+    position: relative;
+}
+
+.loading-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #fff;
+    box-shadow: none;
+    transition: width 2s steps(16); /* chunky 8-bit steps over 2s */
+}
+
+/* Hide overlay when done */
+#loading-overlay.hidden {
+    display: none;
 }

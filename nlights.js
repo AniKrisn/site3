@@ -90,7 +90,7 @@
                 const moveY = Math.cos(timeScale * 0.3) * canvas.height * 0.1;
 
                 const intensity = 0.85;
-                const hueIncrement = 0.90; // Slow hue increase
+                const hueIncrement = 0.8; // Slow hue increase
 
                 for (let x = 0; x < canvas.width; x += 4) {
                     for (let y = 0; y < canvas.height; y += 2) {

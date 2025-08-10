@@ -14,10 +14,19 @@
     <script src="menu.js"></script>
     <script src="conway.js"></script>
 
-    <div id="title">AKRISHNAN</div>
-    <br>
+    <div id="loading-overlay">
+        <div class="loading-ui">
+            <div class="loading-bar">
+                <div class="loading-bar-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    
 
     <ol class="buttons" id="menu">
+        <div id="title">AKRISHNAN</div>
+        <br>
         
         <div id="media">Media</div>
         <br>
@@ -31,10 +40,11 @@
             const menu = document.getElementById('menu');
             setTimeout(() => {
                 if (menu) menu.classList.add('visible');
-            }, 3000);
+            }, 2000);
         });
     </script>
 
+    <script src="loadingbar.js"></script>
 
 </body>
 </html>
