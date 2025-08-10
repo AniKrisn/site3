@@ -13,12 +13,35 @@
         
         document.body.appendChild(canvas);
 
-        // Global visual constants (OS-agnostic)
-        const HUE_BASE = 270;
-        const HUE_SCALE = 110;
-        const LIGHTNESS_BASE = 20;
-        const LIGHTNESS_SCALE = 50;
-        const ALPHA_MUL = 0.20;
+        // OS detection and platform-specific visual tuning
+        const isWindows = (function detectWindows() {
+            try {
+                if (navigator.userAgentData && typeof navigator.userAgentData.platform === 'string') {
+                    return navigator.userAgentData.platform.includes('Windows');
+                }
+            } catch (_) { /* ignore */ }
+            const ua = (navigator.userAgent || '').toLowerCase();
+            const platform = (navigator.platform || '').toLowerCase();
+            return ua.includes('windows') || platform.includes('win');
+        })();
+
+        const visualConfig = isWindows ? {
+            hueBase: 270,
+            hueScale: 110,
+            lightnessBase: 20,
+            lightnessScale: 50,
+            alphaMul: 0.13,
+            addBaseGlow: false,
+            dprCap: Infinity
+        } : {
+            hueBase: 270,
+            hueScale: 110,
+            lightnessBase: 20,
+            lightnessScale: 50,
+            alphaMul: 0.20,
+            addBaseGlow: false,
+            dprCap: Infinity
+        };
 
         function resizeCanvas() {
             const maxScaleDown = 0.85;
