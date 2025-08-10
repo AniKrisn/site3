@@ -31,7 +31,7 @@
             lightnessBase: 30,
             lightnessScale: 55,
             alphaMul: 0.28,
-            addBaseGlow: true,
+            addBaseGlow: false,
             dprCap: 2
         } : {
             hueBase: 270,
@@ -44,15 +44,14 @@
         };
 
         function resizeCanvas() {
-            // Render at a reduced internal resolution to improve performance on lower-end/Windows devices
-            const maxScaleDown = 0.85; // scale down internal resolution on big screens
+            // Match backing resolution to CSS size times a capped DPR to avoid blurry upscaling
+            const maxScaleDown = 0.85; // scale down internal resolution on big screens (non-Windows only)
             const largeScreen = window.innerWidth * window.innerHeight > 1600 * 900;
-            const baseScale = largeScreen ? maxScaleDown : 1;
             const dpr = typeof window.devicePixelRatio === 'number' ? window.devicePixelRatio : 1;
-            const dprScale = dpr > visualConfig.dprCap ? (visualConfig.dprCap / dpr) : 1;
-            const scale = baseScale * dprScale;
-            canvas.width = Math.max(1, Math.floor(window.innerWidth * scale));
-            canvas.height = Math.max(1, Math.floor(window.innerHeight * scale));
+            const targetDpr = Math.min(dpr, visualConfig.dprCap || dpr);
+            const baseScale = (!isWindows && largeScreen) ? maxScaleDown : 1;
+            canvas.width = Math.max(1, Math.floor(window.innerWidth * targetDpr * baseScale));
+            canvas.height = Math.max(1, Math.floor(window.innerHeight * targetDpr * baseScale));
         }
 
         window.addEventListener('resize', resizeCanvas);
