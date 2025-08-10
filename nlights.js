@@ -13,11 +13,44 @@
         
         document.body.appendChild(canvas);
 
+        // OS detection and platform-specific visual tuning
+        const isWindows = (function detectWindows() {
+            try {
+                if (navigator.userAgentData && typeof navigator.userAgentData.platform === 'string') {
+                    return navigator.userAgentData.platform.includes('Windows');
+                }
+            } catch (_) { /* ignore */ }
+            const ua = (navigator.userAgent || '').toLowerCase();
+            const platform = (navigator.platform || '').toLowerCase();
+            return ua.includes('windows') || platform.includes('win');
+        })();
+
+        const visualConfig = isWindows ? {
+            hueBase: 200,
+            hueScale: 160,
+            lightnessBase: 30,
+            lightnessScale: 55,
+            alphaMul: 0.28,
+            addBaseGlow: true,
+            dprCap: 2
+        } : {
+            hueBase: 270,
+            hueScale: 110,
+            lightnessBase: 20,
+            lightnessScale: 50,
+            alphaMul: 0.20,
+            addBaseGlow: false,
+            dprCap: Infinity
+        };
+
         function resizeCanvas() {
             // Render at a reduced internal resolution to improve performance on lower-end/Windows devices
             const maxScaleDown = 0.85; // scale down internal resolution on big screens
             const largeScreen = window.innerWidth * window.innerHeight > 1600 * 900;
-            const scale = largeScreen ? maxScaleDown : 1;
+            const baseScale = largeScreen ? maxScaleDown : 1;
+            const dpr = typeof window.devicePixelRatio === 'number' ? window.devicePixelRatio : 1;
+            const dprScale = dpr > visualConfig.dprCap ? (visualConfig.dprCap / dpr) : 1;
+            const scale = baseScale * dprScale;
             canvas.width = Math.max(1, Math.floor(window.innerWidth * scale));
             canvas.height = Math.max(1, Math.floor(window.innerHeight * scale));
         }
@@ -106,6 +139,17 @@
             ctx.fillStyle = `rgba(30, 5, 20, ${fadeAlpha})`;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            if (visualConfig.addBaseGlow) {
+                const prevComposite = ctx.globalCompositeOperation;
+                ctx.globalCompositeOperation = 'lighter';
+                const glow = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                glow.addColorStop(0, `hsla(${visualConfig.hueBase}, 100%, ${Math.max(0, Math.min(100, visualConfig.lightnessBase + 10))}%, 0.05)`);
+                glow.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = glow;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.globalCompositeOperation = prevComposite;
+            }
+
             // Allow a longer visible window so slow startups still show the effect
             if (elapsed < 3000) {
                 // half as fast on mobile screens because the speed is calculated with screen width
@@ -134,9 +178,9 @@
                             diagonalGradient > irregularShape - 0.1 && 
                             diagonalGradient < irregularShape + 0.1) {
                             const depth = (noiseValue2 - 0.5) * 3;
-                            const hue = (270 + depth * 110 + time * hueIncrement) % 180;
-                            const lightness = 20 + depth * 50;
-                            const alpha = (noiseValue - 0.55) * 2 * 0.20;
+                            const hue = (visualConfig.hueBase + depth * visualConfig.hueScale + time * hueIncrement) % 180;
+                            const lightness = visualConfig.lightnessBase + depth * visualConfig.lightnessScale;
+                            const alpha = (noiseValue - 0.55) * 2 * visualConfig.alphaMul;
                             ctx.fillStyle = `hsla(${hue}, 100%, ${lightness}%, ${alpha})`;
                             const baseW = Math.max(2, stepX - 1);
                             const baseH = Math.max(2, stepY - 1);
