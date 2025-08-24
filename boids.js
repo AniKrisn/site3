@@ -108,6 +108,7 @@ class Boid {
         this.fadedOut = false;
         this.fadeOutStart = null;
         this.color = BOID_COLORS[Math.floor(Math.random() * BOID_COLORS.length)];
+        this.fadeStartOpacity = 1; // captures opacity at fade-out start
     }
     update() {
         this.vel = this.vel.add(this.acc).limit(this.maxSpeed);
@@ -194,6 +195,11 @@ class Boid {
     }
     fadeIn(now) {
         if (this.fadedIn || this.fadingOut) return;
+        // If a stop has been requested, don't start new fade-ins
+        if (fadeOutGlobalStartAfterMs === 0) {
+            this.fadingIn = false;
+            return;
+        }
         if (!this.fadingIn && now >= this.fadeInDelay) {
             this.fadingIn = true;
             this.fadeInStart = now;
@@ -213,11 +219,12 @@ class Boid {
         if (!this.fadingOut && now >= startThreshold) {
             this.fadingOut = true;
             this.fadeOutStart = now;
+            this.fadeStartOpacity = this.opacity;
         }
         if (this.fadingOut) {
             const elapsed = now - this.fadeOutStart;
-            const remaining = Math.max(0, 1 - (elapsed / fadeOutDurationMs));
-            this.opacity = remaining;
+            const t = Math.min(1, Math.max(0, elapsed / fadeOutDurationMs));
+            this.opacity = Math.max(0, this.fadeStartOpacity * (1 - t));
             if (this.opacity <= 0) {
                 this.opacity = 0;
                 this.fadedOut = true;
@@ -289,7 +296,7 @@ for (let i = 0; i < boidCount; i++) {
 let animationStarted = false;
 let animationStartTime = null;
 let fadeOutGlobalStartAfterMs = Infinity;
-const fadeOutDurationMs = 1200;
+const fadeOutDurationMs = 700;
 
 function animate(now) {
     if (!animationStarted) return;
@@ -388,7 +395,26 @@ function startBoids() {
 
 function stopBoids() {
     if (!animationStarted) return;
+    // Signal global fade-out and immediately handle current boid states
     fadeOutGlobalStartAfterMs = 0;
+    const elapsed = performance.now() - animationStartTime;
+    for (let boid of boids) {
+        const hasAppeared = boid.opacity > 0 || boid.fadingIn || boid.fadedIn;
+        if (!hasAppeared) {
+            // Never appeared; mark as fully faded to finish quickly
+            boid.fadingIn = false;
+            boid.fadedIn = false;
+            boid.fadingOut = false;
+            boid.fadedOut = true;
+            boid.fadeInStart = null;
+            boid.fadeOutStart = null;
+            boid.opacity = 0;
+        } else if (!boid.fadedOut) {
+            // Start fading existing ones right away
+            boid.fadingOut = true;
+            boid.fadeOutStart = elapsed;
+        }
+    }
 }
 
 window.startBoids = startBoids;
